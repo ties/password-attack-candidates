@@ -1,21 +1,26 @@
 use clap::Parser;
 
+/// Generates password variations based on Levenshtein distance
 #[derive(Parser, Debug)]
-#[command(author, version, about = "Generate hashcat password candidates with 1-2 character distance", long_about = None)]
+#[command(author, version, about, long_about = None)]
 pub struct Config {
-    /// Input password to generate variations from
+    /// The password to generate variations for (use --stdin for multiple)
     #[arg(short, long)]
     pub password: Option<String>,
-    
-    /// Read passwords from stdin, one per line
+
+    /// Read passwords from standard input (one per line)
     #[arg(long)]
     pub stdin: bool,
-    
-    /// Maximum edit distance (1 or 2)
-    #[arg(short, long, default_value = "2")]
+
+    /// Maximum Levenshtein distance for variations
+    #[arg(short, long, default_value_t = 1)]
     pub max_distance: u8,
-    
-    /// Include the original password in the output
-    #[arg(short, long)]
+
+    /// Include the original password(s) in the output
+    #[arg(long)]
     pub include_original: bool,
+
+    /// Count the number of variations instead of printing them
+    #[arg(long)]
+    pub count: bool,
 }

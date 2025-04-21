@@ -15,10 +15,6 @@ pub fn generate_variations(password: &str, max_distance: u8) -> HashSet<String> 
             variations.extend(distance_2);
         }
     }
-    
-    // Remove the original password if it was added during generation
-    variations.remove(password);
-    
     variations
 }
 
@@ -83,9 +79,6 @@ mod tests {
     fn test_variations_count_simple() {
         let variations = generate_variations("a", 1);
         
-        // Should not contain original
-        assert!(!variations.contains("a"));
-        
         // For "a", we expect:
         // - 93 substitutions (printable ASCII without 'a')
         // - 1 deletion (empty string)
@@ -102,9 +95,6 @@ mod tests {
         
         // Check for a distance 2 variation: substitute 'a' -> 'b' and then insert 'c'
         assert!(variations.contains("bc") || variations.contains("cb"));
-        
-        // Should not contain original
-        assert!(!variations.contains(password));
         
         // Should be a lot more variations with distance 2
         assert!(variations.len() > 1000);

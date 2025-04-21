@@ -8,6 +8,14 @@ mod generator;
 use config::Config;
 use generator::generate_variations;
 
+// Helper function to count typeable characters
+fn count_typeable_chars(s: &str) -> usize {
+    s.chars().filter(|&c| {
+        c.is_ascii_alphanumeric() ||
+        "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~".contains(c) // Common symbols
+    }).count()
+}
+
 fn main() {
     // Parse command-line arguments
     let config = Config::parse();
@@ -38,19 +46,35 @@ fn main() {
         eprintln!("Error: No password provided. Use -p or --stdin");
         process::exit(1);
     };
-    
-    let stdout = io::stdout();
-    let mut stdout_lock = stdout.lock();
 
-    for password in passwords {
-        // First output the original password if requested
-        if config.include_original {
-            writeln!(stdout_lock, "{}", password).expect("Failed to write to stdout");
+    if config.count {
+        let mut total_count: u64 = 0;
+        for password in &passwords {
+            if config.include_original {
+                total_count += 1;
+            }
+            total_count += generate_variations(password, config.max_distance).iter().count() as u64;
         }
-        
-        // Generate and stream the variations
-        for variation in generate_variations(&password, config.max_distance) {
-            writeln!(stdout_lock, "{}", variation).expect("Failed to write to stdout");
+        println!("{}", total_count);
+    } else {
+        let mut all_variations: Vec<String> = Vec::new();
+
+        // Collect all variations first
+        for password in &passwords {
+            if config.include_original {
+                all_variations.push(password.clone());
+            }
+            all_variations.extend(generate_variations(password, config.max_distance));
+        }
+
+        // Sort the collected variations
+        all_variations.sort_by_key(|variation| count_typeable_chars(variation));
+
+        // Print the sorted variations
+        let stdout = io::stdout();
+        let mut stdout_lock = stdout.lock();
+        for variation in all_variations {
+             writeln!(stdout_lock, "{}", variation).expect("Failed to write to stdout");
         }
     }
 }
