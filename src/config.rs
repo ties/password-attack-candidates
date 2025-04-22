@@ -14,7 +14,7 @@ pub struct Config {
 
     /// Maximum Levenshtein distance for variations
     #[arg(short, long, default_value_t = 1)]
-    pub max_distance: u8,
+    pub max_distance: usize,
 
     /// Include the original password(s) in the output
     #[arg(long)]
