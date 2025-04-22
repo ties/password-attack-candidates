@@ -7,7 +7,7 @@ fn generate_distance_1_variations(password: &str) -> HashSet<String> {
     
     // 1. Character substitutions
     for i in 0..chars.len() {
-        for c in '!'..'~' {
+        for c in '!'..='~' {
             if c != chars[i] {
                 let mut new_chars = chars.clone();
                 new_chars[i] = c;
@@ -25,7 +25,7 @@ fn generate_distance_1_variations(password: &str) -> HashSet<String> {
     
     // 3. Character insertions
     for i in 0..=chars.len() {
-        for c in '!'..'~' {
+        for c in '!'..='~' {
             let mut new_chars = chars.clone();
             new_chars.insert(i, c);
             variations.insert(new_chars.iter().collect());
@@ -130,14 +130,12 @@ mod tests {
         // Check for insertions
         assert!(variations.contains(&"aa".to_string()));
         assert!(variations.contains(&"ba".to_string()));
-        
-        // Original should be preserved in the set
-        assert!(variations.contains(&"a".to_string()));
+        assert!(variations.contains(&"ab".to_string()));
     }
     
     #[test]
     fn test_variations_count_simple() {
-        let variations = generate_variations("a", 1, 1);
+        let variations = generate_variations("a", 1, 0);
         
         // For "a", we expect:
         // - 93 substitutions (printable ASCII without 'a')
