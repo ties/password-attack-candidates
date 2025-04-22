@@ -73,13 +73,15 @@ pub fn generate_transposition_variations(password: &str, offset: usize) -> Vec<S
 }
 
 pub fn generate_variations(password: &str, max_distance: usize, transposition_distance: usize) -> Vec<String> {
-    let mut all_variations = Vec::new();
+    let mut all_variations = HashSet::new();
+    all_variations.insert(password.to_string());
     
     // Track all variations at each distance level to build up next level
     let mut variations_by_distance: Vec<HashSet<String>> = Vec::with_capacity(max_distance);
+    variations_by_distance.push(vec![password.to_string()].into_iter().collect());
     
     // Use a loop to build up variations for each distance level up to max_distance
-    for distance in 1..max_distance {
+    for distance in 1..=max_distance {
         let mut next_distance = HashSet::new();
         
         // Apply distance 1 variations to all variations from the previous distance
@@ -96,16 +98,19 @@ pub fn generate_variations(password: &str, max_distance: usize, transposition_di
     for distance in 1..=transposition_distance {
         // Only consider reasonable transposition offsets
         let max_offset = distance.min(3); // Limit to maximum offset of 3
+        let base_words = all_variations.clone();
         
         for offset in 1..=max_offset {
-            if offset < password.len() {
-                let transpositions = generate_transposition_variations(password, offset);
-                all_variations.extend(transpositions);
+            for word in &base_words {
+                if offset <word.len() {
+                    let transpositions = generate_transposition_variations(word, offset);
+                    all_variations.extend(transpositions);
+                }
             }
         }
     }
     
-    all_variations
+    all_variations.iter().cloned().collect()
 }
 
 #[cfg(test)]
