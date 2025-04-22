@@ -72,7 +72,7 @@ pub fn generate_transposition_variations(password: &str, offset: usize) -> Vec<S
     variations
 }
 
-pub fn generate_variations(password: &str, max_distance: usize, transposition_distance: usize, num_transpositions: usize) -> Vec<String> {
+pub fn generate_variations(password: &str, max_distance: usize, transposition_distance: usize, max_transpositions: usize) -> Vec<String> {
     let mut all_variations = HashSet::new();
     all_variations.insert(password.to_string());
     
@@ -95,12 +95,12 @@ pub fn generate_variations(password: &str, max_distance: usize, transposition_di
     }
     
     // Add transposition variations
-    if transposition_distance > 0 && num_transpositions > 0 {
+    if transposition_distance > 0 && max_transpositions > 0 {
         let mut transposition_variations = HashSet::new();
         transposition_variations.extend(all_variations.clone());
         
-        // Apply transpositions in sequence up to num_transpositions
-        for _ in 0..num_transpositions {
+        // Apply transpositions in sequence up to max_transpositions
+        for _ in 0..max_transpositions {
             let current_words = transposition_variations.clone();
             let mut new_variations = HashSet::new();
             
@@ -218,5 +218,48 @@ mod tests {
         // With transposition_distance = 3, offset=3 transpositions should be included
         let variations_trans_3 = generate_variations("abcde", 1, 3, 1);
         assert!(variations_trans_3.contains(&"dbcae".to_string())); // Offset=3 swap
+    }
+    
+    #[test]
+    fn test_multiple_transpositions() {
+        let password = "abcdef";
+        
+        // With max_transpositions = 1, only single transpositions should be present
+        let variations_single = generate_variations(password, 1, 2, 1);
+        assert!(variations_single.contains(&"bacdef".to_string())); // First level: a-b swap
+        assert!(variations_single.contains(&"adcbef".to_string())); // First level: b-c swap with offset=2
+        
+        // This should not be present with only 1 transposition
+        // (it would require a-b swap followed by e-f swap)
+        assert!(!variations_single.contains(&"bacdfe".to_string()));
+        
+        // With max_transpositions = 2, we should see variations with 2 transpositions applied
+        let variations_multiple = generate_variations(password, 1, 2, 2);
+        assert!(variations_multiple.contains(&"bacdef".to_string())); // Still have first level transpositions
+        assert!(variations_multiple.contains(&"bacdfe".to_string())); // Second level: a-b swap AND e-f swap
+        assert!(variations_multiple.contains(&"adcbfe".to_string())); // Second level: b-c offset=2 swap AND e-f swap
+        
+        // With max_transpositions = 3, we should get even more variations
+        let variations_triple = generate_variations(password, 1, 1, 3);
+        // This requires 3 adjacent swaps: a-b, then c-d, then e-f
+        assert!(variations_triple.contains(&"bacdfe".to_string()));
+        
+        // Check that we get more variations with more transpositions
+        assert!(variations_multiple.len() > variations_single.len());
+        assert!(variations_triple.len() >= variations_multiple.len());
+    }
+    
+    #[test]
+    fn test_max_transpositions_zero() {
+        let password = "abcde";
+        
+        // With max_transpositions = 0, no transpositions should be included
+        let variations = generate_variations(password, 1, 2, 0);
+        assert!(!variations.contains(&"bacde".to_string())); // No adjacent swap
+        assert!(!variations.contains(&"cbade".to_string())); // No offset=2 swap
+        
+        // Should only contain the original password and distance=1 variations (substitutions, insertions, deletions)
+        let variations_with_trans = generate_variations(password, 1, 2, 1);
+        assert!(variations_with_trans.len() > variations.len());
     }
 }
