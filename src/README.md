@@ -11,5 +11,5 @@ Two derivations are implemented:
 ```
 # example of recovering a SSH key
 $ python ~/bin/john/run/ssh2john.py ~/.ssh/id_ed25519_with_typo > ~/Desktop/id_ed25519_with_typo_john.txt   
-$ ./target/release/password_distance -p password --max-distance=0 --transposition-distance=2 --max-transpositions=1 | ~/bin/john/run/john ~/Desktop/id_ed25519_with_typo_john.txt
+$ ./target/release/password_distance -p password --max-distance=0 --transposition-distance=2 --max-transpositions=1 | ~/bin/john/run/john ~/Desktop/id_ed25519_with_typo_john.txt --stdin
 ```
