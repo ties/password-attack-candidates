@@ -7,7 +7,7 @@ fn generate_distance_1_variations(password: &str) -> HashSet<String> {
     
     // 1. Character substitutions
     for i in 0..chars.len() {
-        for c in '!'..='~' {
+        for c in ' '..='~' {
             if c != chars[i] {
                 let mut new_chars = chars.clone();
                 new_chars[i] = c;
@@ -25,7 +25,7 @@ fn generate_distance_1_variations(password: &str) -> HashSet<String> {
     
     // 3. Character insertions
     for i in 0..=chars.len() {
-        for c in '!'..='~' {
+        for c in ' '..='~' {
             let mut new_chars = chars.clone();
             new_chars.insert(i, c);
             variations.insert(new_chars.iter().collect());
@@ -138,11 +138,14 @@ mod tests {
         let variations = generate_variations("a", 1, 0);
         
         // For "a", we expect:
-        // - 93 substitutions (printable ASCII without 'a')
+        // - 94 substitutions (printable ASCII without 'a' - include ' ')
         // - 1 deletion (empty string)
-        // - 94 insertions before 'a' (all printable ASCII)
-        // - 94 insertions after 'a' (all printable ASCII)
-        assert_eq!(variations.len(), 93 + 1 + 94 + 94);
+        // - 95 insertions before 'a' (all printable ASCII)
+        // - 95 insertions after 'a' (all printable ASCII)
+        assert_eq!(variations.len(), 94 + 1 + 95 + 95);
+        // test first and last char
+        assert!(variations.iter().any(|s| s.contains(' ')));
+        assert!(variations.iter().any(|s| s.contains('~')));
     }
     
     #[test]
