@@ -95,10 +95,10 @@ pub fn generate_variations(password: &str, max_distance: usize, transposition_di
     }
     
     // Add transposition variations (for each distance level)
+    let base_words = all_variations.clone();
     for distance in 1..=transposition_distance {
         // Only consider reasonable transposition offsets
         let max_offset = distance.min(3); // Limit to maximum offset of 3
-        let base_words = all_variations.clone();
         
         for offset in 1..=max_offset {
             for word in &base_words {
