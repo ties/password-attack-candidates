@@ -16,6 +16,10 @@ pub struct Config {
     #[arg(short, long, default_value_t = 1)]
     pub max_distance: usize,
 
+    /// Maximum transposition distance for variations
+    #[arg(short = 't', long, default_value_t = 1)]
+    pub transposition_distance: usize,
+
     /// Include the original password(s) in the output
     #[arg(long)]
     pub include_original: bool,

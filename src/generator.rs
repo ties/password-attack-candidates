@@ -72,23 +72,28 @@ pub fn generate_transposition_variations(password: &str, offset: usize) -> Vec<S
     variations
 }
 
-pub fn generate_variations(password: &str, max_distance: usize) -> Vec<String> {
+pub fn generate_variations(password: &str, max_distance: usize, transposition_distance: usize) -> Vec<String> {
     let mut all_variations = Vec::new();
     
-    // Apply distance 1 variations
-    let distance_1 = generate_distance_1_variations(password);
-    all_variations.extend(distance_1.clone());
+    // Track all variations at each distance level to build up next level
+    let mut variations_by_distance: Vec<HashSet<String>> = Vec::with_capacity(max_distance);
     
-    // If max_distance is 2, apply distance 1 variations to the distance 1 variations
-    if max_distance >= 2 {
-        for var in distance_1 {
-            let distance_2 = generate_distance_1_variations(&var);
-            all_variations.extend(distance_2);
+    // Use a loop to build up variations for each distance level up to max_distance
+    for distance in 1..max_distance {
+        let mut next_distance = HashSet::new();
+        
+        // Apply distance 1 variations to all variations from the previous distance
+        for var in &variations_by_distance[distance - 1] {
+            let new_variations = generate_distance_1_variations(var);
+            next_distance.extend(new_variations);
         }
+        
+        variations_by_distance.push(next_distance.clone());
+        all_variations.extend(next_distance);
     }
     
     // Add transposition variations (for each distance level)
-    for distance in 1..=max_distance {
+    for distance in 1..=transposition_distance {
         // Only consider reasonable transposition offsets
         let max_offset = distance.min(3); // Limit to maximum offset of 3
         
@@ -112,22 +117,22 @@ mod tests {
         let variations = generate_distance_1_variations("a");
         
         // Check for substitutions
-        assert!(variations.contains("b"));
+        assert!(variations.contains(&"b".to_string()));
         
         // Check for deletions
-        assert!(variations.contains(""));
+        assert!(variations.contains(&"".to_string()));
         
         // Check for insertions
-        assert!(variations.contains("aa"));
-        assert!(variations.contains("ba"));
+        assert!(variations.contains(&"aa".to_string()));
+        assert!(variations.contains(&"ba".to_string()));
         
         // Original should be preserved in the set
-        assert!(variations.contains("a"));
+        assert!(variations.contains(&"a".to_string()));
     }
     
     #[test]
     fn test_variations_count_simple() {
-        let variations = generate_variations("a", 1);
+        let variations = generate_variations("a", 1, 1);
         
         // For "a", we expect:
         // - 93 substitutions (printable ASCII without 'a')
@@ -141,10 +146,10 @@ mod tests {
     fn test_distance_2_variations() {
         let password = "a";
         // Get all distance <= 2 variations (not including original)
-        let variations = generate_variations(password, 2);
+        let variations = generate_variations(password, 2, 1);
         
         // Check for a distance 2 variation: substitute 'a' -> 'b' and then insert 'c'
-        assert!(variations.contains("bc") || variations.contains("cb"));
+        assert!(variations.contains(&"bc".to_string()) || variations.contains(&"cb".to_string()));
         
         // Should be a lot more variations with distance 2
         assert!(variations.len() > 1000);
@@ -171,9 +176,31 @@ mod tests {
     
     #[test]
     fn test_transpositions_included_in_variations() {
-        let variations = generate_variations("abc", 1);
+        let variations = generate_variations("abc", 1, 1);
         // Should include transpositions with offset=1
         assert!(variations.contains(&"bac".to_string()));
         assert!(variations.contains(&"acb".to_string()));
+    }
+    
+    #[test]
+    fn test_transposition_distance_parameter() {
+        // With transposition_distance = 0, no transpositions should be included
+        let variations_no_trans = generate_variations("abcde", 1, 0);
+        assert!(!variations_no_trans.contains(&"bacde".to_string())); // No adjacent swap
+        
+        // With transposition_distance = 1, only offset=1 transpositions
+        let variations_trans_1 = generate_variations("abcde", 1, 1);
+        assert!(variations_trans_1.contains(&"bacde".to_string())); // Adjacent swap
+        assert!(!variations_trans_1.contains(&"cbade".to_string())); // Offset=2 swap not included
+        
+        // With transposition_distance = 2, both offset=1 and offset=2 transpositions
+        let variations_trans_2 = generate_variations("abcde", 1, 2);
+        assert!(variations_trans_2.contains(&"bacde".to_string())); // Adjacent swap
+        assert!(variations_trans_2.contains(&"cbade".to_string())); // Offset=2 swap included
+        assert!(variations_trans_2.contains(&"abedc".to_string())); // Offset=2 swap at different position
+        
+        // With transposition_distance = 3, offset=3 transpositions should be included
+        let variations_trans_3 = generate_variations("abcde", 1, 3);
+        assert!(variations_trans_3.contains(&"dbcae".to_string())); // Offset=3 swap
     }
 }
