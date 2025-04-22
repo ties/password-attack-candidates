@@ -53,7 +53,7 @@ fn main() {
             if config.include_original {
                 total_count += 1;
             }
-            total_count += generate_variations(password, config.max_distance, config.transposition_distance).iter().count() as u64;
+            total_count += generate_variations(password, config.max_distance, config.transposition_distance, config.num_transpositions).iter().count() as u64;
         }
         println!("{}", total_count);
     } else {
@@ -64,7 +64,7 @@ fn main() {
             if config.include_original {
                 all_variations.push(password.clone());
             }
-            all_variations.extend(generate_variations(password, config.max_distance, config.transposition_distance));
+            all_variations.extend(generate_variations(password, config.max_distance, config.transposition_distance, config.num_transpositions));
         }
 
         // Sort the collected variations
